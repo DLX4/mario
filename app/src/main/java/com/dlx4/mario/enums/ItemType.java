@@ -5,5 +5,5 @@ package com.dlx4.mario.enums;
  */
 
 public enum ItemType {
-    Mushroom,Flower,Coin,Star
+    Mushroom, Flower, Coin, Star
 }

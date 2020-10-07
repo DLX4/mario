@@ -2,8 +2,6 @@ package com.dlx4.mario;
 
 import android.content.DialogInterface;
 import android.os.Bundle;
-//import android.support.v7.app.AlertDialog;
-//import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
 import androidx.appcompat.app.AlertDialog;
@@ -11,19 +9,19 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
-    private MyView2 view;
+    private SmView view;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        view = new MyView2(this);
+        view = new SmView(this);
         setContentView(view);
 
     }
 
     @Override
     public void onBackPressed() {
-        //响应返回按钮事件
+        // 响应返回按钮事件
         view.setPause(true);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("提示")
@@ -43,6 +41,6 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .setCancelable(false)
                 .show();
-//		super.onBackPressed();
+// 		super.onBackPressed();
     }
 }

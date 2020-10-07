@@ -16,7 +16,7 @@ public class EnemyBullet extends Bullet {
     public void draw(Canvas canvas) {
         if (isMirror()) {
             canvas.save();
-            //翻转画布 相当于翻转人物
+            // 翻转画布 相当于翻转人物
             canvas.scale(-1, 1, getX() + getWidth() / 2, getY() + getHeight() / 2);
             super.draw(canvas);
             canvas.restore();

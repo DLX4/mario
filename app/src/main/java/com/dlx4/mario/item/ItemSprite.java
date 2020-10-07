@@ -21,22 +21,22 @@ public class ItemSprite extends Sprite {
 
     public ItemSprite(int width, int height, List<Bitmap> bitmaps) {
         super(width, height, bitmaps);
-        //道具默认是运动状态
+        // 道具默认是运动状态
         setRunning(true);
     }
 
     @Override
     public void logic() {
-        if (!isDead()&&isVisiable()) {
-            if(isJumping()) {
-                move(0, mSpeedY++);
+        if (!isDead() && isVisible()) {
+            if (isJumping()) {
+                move(0, speedY++);
             }
             if (isRunning()) {
                 if (isMirror()) {
-                    //右
+                    // 右
                     move(2, 0);
                 } else {
-                    //左
+                    // 左
                     move(-2, 0);
                 }
             }
@@ -46,9 +46,9 @@ public class ItemSprite extends Sprite {
 
     @Override
     protected void outOfBounds() {
-        //在超出左边界 以及掉入坑里的是否表示为不可见
+        // 在超出左边界 以及掉入坑里的是否表示为不可见
         if (getX() < -getWidth() || getY() > 400) {
-            setVisiable(false);
+            setVisible(false);
         }
     }
 }

@@ -17,11 +17,11 @@ public class Broken extends Sprite {
 
     @Override
     public void logic() {
-        if(isVisiable()){
+        if (isVisible()) {
             nextFrame();
-            move(0,-3);
-            if(getFrameSequenceIndex()==0){
-                setVisiable(false);
+            move(0, -3);
+            if (getFrameSeqIndex() == 0) {
+                setVisible(false);
             }
         }
     }
