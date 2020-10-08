@@ -14,9 +14,12 @@ public class Turtle extends Enemy {
 
     private final Thread zeroDamagThread;
     private boolean canFly;
-    private boolean isZeroDamage;// 标志是否处于免伤状态
-    private int zeroDamageTime;// 免伤时间
-    private boolean isZeroDamageThreadStarted;// 标志进程是否开始
+    // 标志是否处于免伤状态
+    private boolean isZeroDamage;
+    // 免伤时间
+    private int zeroDamageTime;
+    // 标志进程是否开始
+    private boolean isZeroDamageThreadStarted;
     private long delay2;
 
     public Turtle(int width, int height, List<Bitmap> bitmaps) {
@@ -55,7 +58,6 @@ public class Turtle extends Enemy {
 
     @Override
     public void logic() {
-//         super.logic();
         if (!isDead()) {
             // 逻辑部分
             if (isZeroDamage) {
@@ -113,10 +115,7 @@ public class Turtle extends Enemy {
                         move(-10, 0);
                     }
                 }
-//     if(delay2++>10){
-//         delay2 =0;
-// //         setVisiable(false);
-//     }
+
             } else {
                 // 被子弹打到 反转下落
                 move(0, speedY++);

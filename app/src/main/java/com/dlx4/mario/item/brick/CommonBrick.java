@@ -4,32 +4,20 @@ import android.graphics.Bitmap;
 
 import java.util.List;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * Created by Suramire on 2017/12/9.
  */
-
+@Setter
+@Getter
 public class CommonBrick extends Brick {
     private boolean canBroken;
-    private Broken mBroken;
+    private Broken broken;
 
     public CommonBrick(int width, int height, List<Bitmap> bitmaps) {
         super(width, height, bitmaps);
-    }
-
-    public Broken getBroken() {
-        return mBroken;
-    }
-
-    public void setBroken(Broken mBroken) {
-        this.mBroken = mBroken;
-    }
-
-    public boolean isCanBroken() {
-        return canBroken;
-    }
-
-    public void setCanBroken(boolean canBroken) {
-        this.canBroken = canBroken;
     }
 
     @Override

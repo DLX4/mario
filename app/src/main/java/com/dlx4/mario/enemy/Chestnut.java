@@ -10,9 +10,9 @@ import lombok.Setter;
 /**
  * 敌人类-板栗
  */
-public class Chestunt extends Enemy {
+public class Chestnut extends Enemy {
 
-    public Chestunt(int width, int height, List<Bitmap> bitmaps) {
+    public Chestnut(int width, int height, List<Bitmap> bitmaps) {
         super(width, height, bitmaps);
     }
 

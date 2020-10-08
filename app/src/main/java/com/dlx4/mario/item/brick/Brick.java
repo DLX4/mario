@@ -11,10 +11,14 @@ import com.dlx4.mario.item.Star;
 
 import java.util.List;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * 砖块类
  */
-
+@Setter
+@Getter
 public class Brick extends ItemSprite {
     // 表示道具类型 枚举
     protected ItemType itemType;
@@ -31,32 +35,6 @@ public class Brick extends ItemSprite {
         super(bitmap);
     }
 
-    // region Getter&Setter
-    public ItemType getItemType() {
-        return itemType;
-    }
-
-    public void setItemType(ItemType itemType) {
-        this.itemType = itemType;
-    }
-
-    public boolean hasItem() {
-        return hasItem;
-    }
-
-    public void setHasItem(boolean hasItem) {
-        this.hasItem = hasItem;
-    }
-
-    // endregion
-
-    public ItemSprite getItemSprite() {
-        return itemSprite;
-    }
-
-    public void setItemSprite(ItemSprite itemSprite) {
-        this.itemSprite = itemSprite;
-    }
 
     @Override
     public void logic() {

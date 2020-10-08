@@ -7,16 +7,21 @@ import android.util.Log;
 
 import java.io.IOException;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class SmSoundPool {
 
     private Context mContext;
     private SoundPool mSoundPool;
-    private int hitbrickSound;
+    private int hitBrickSound;
     private int coinSound;
     private int hurryUpSound;
     private int hitEnemySound;
     private int jumpSound;
-    private int cannotbreakSound;
+    private int cannotBreakSound;
     private int hurtSound;
     private int cannonSound;
     private int transferSound;
@@ -27,9 +32,9 @@ public class SmSoundPool {
         super();
         this.mContext = mContext;
         mSoundPool = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
-        cannotbreakSound = getSoundId("sounds/cannotbreak.mp3");
+        cannotBreakSound = getSoundId("sounds/cannotbreak.mp3");
         itemSound = getSoundId("sounds/mushroom.mp3");
-        hitbrickSound = getSoundId("sounds/duang.mp3");
+        hitBrickSound = getSoundId("sounds/duang.mp3");
         coinSound = getSoundId("sounds/coin.mp3");
         hurryUpSound = getSoundId("sounds/hurryup.mp3");
         jumpSound = getSoundId("sounds/jump.mp3");
@@ -38,52 +43,6 @@ public class SmSoundPool {
         cannonSound = getSoundId("sounds/cannon.mp3");
         transferSound = getSoundId("sounds/transfer.mp3");
         brokenSound = getSoundId("sounds/broken.mp3");
-
-
-    }
-
-    public int getBrokenSound() {
-        return brokenSound;
-    }
-
-    public int getTransferSound() {
-        return transferSound;
-    }
-
-    public int getCannonSound() {
-        return cannonSound;
-    }
-
-    public int getHurtSound() {
-        return hurtSound;
-    }
-
-    public int getCannotbreakSound() {
-        return cannotbreakSound;
-    }
-
-    public int getHitEnemySound() {
-        return hitEnemySound;
-    }
-
-    public int getJumpSound() {
-        return jumpSound;
-    }
-
-    public int getHurryUpSound() {
-        return hurryUpSound;
-    }
-
-    public int getCoinSound() {
-        return coinSound;
-    }
-
-    public int getHitbrickSound() {
-        return hitbrickSound;
-    }
-
-    public int getItemSound() {
-        return itemSound;
     }
 
     public void play(int soundID) {

@@ -21,7 +21,7 @@ import android.view.WindowManager;
 import com.dlx4.mario.audio.SmMusic;
 import com.dlx4.mario.audio.SmSoundPool;
 import com.dlx4.mario.enemy.Cannon;
-import com.dlx4.mario.enemy.Chestunt;
+import com.dlx4.mario.enemy.Chestnut;
 import com.dlx4.mario.enemy.Enemy;
 import com.dlx4.mario.enemy.Turtle;
 import com.dlx4.mario.enums.GameState;
@@ -43,6 +43,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import lombok.Getter;
+import lombok.Setter;
 
 import static com.dlx4.mario.enums.GameState.FINISH;
 import static com.dlx4.mario.enums.GameState.GAMEOVER;
@@ -66,14 +69,13 @@ import static com.dlx4.mario.enums.Site.左上;
 import static com.dlx4.mario.enums.Site.左下;
 import static com.dlx4.mario.enums.Site.左中;
 
-
 public class SmView extends SurfaceView implements Callback, Runnable {
     public static final String TAG = "aaa";
-    private final SmMusic myMusic;
-    private final SmSoundPool mySoundPool;
+    private final SmMusic smMusic;
+    private final SmSoundPool smSoundPool;
     private final SharedPreferences sp;
-    // region Field
-    private boolean isPause;
+
+    @Setter @Getter private boolean pause;
     private SurfaceHolder holder;
     private boolean isRunning;
     private Canvas lockCanvas;
@@ -86,35 +88,38 @@ public class SmView extends SurfaceView implements Callback, Runnable {
     private Bitmap rightBitmap;
     private RectF rectF;
     private Mario mario;
-    private TiledLayer tiledLayer_peng01;
-    private Bitmap gameoverbitmap;
-    private List<Sprite> chestunts;
-    private List<Bitmap> chestuntBitmaps;
+    private TiledLayer tiledLayer;
+    private Bitmap gameOverBitmap;
+    private List<Sprite> chestnuts;
+    private List<Bitmap> chestnutBitmaps;
     private boolean isEnemyShown1;
     private boolean isEnemyShown2;
     private boolean isEnemyShown3;
-    private Integer score;// 用于记录分数
+    // 用于记录分数
+    private Integer score;
     private Paint mPaint;
     private Bitmap marioBitmap;
     private int lifeNumber = 3;
-    private boolean isInited;
+    private boolean inited;
     private String scoreString;
     private int delay;
     private Bitmap logoBitmap;
     private List<Sprite> bricks;
-    private int time;// 表示剩余时间
+    // 表示剩余时间
+    private int time;
     private Thread thread;
     private Bitmap finishBitmap;
     private boolean threadRunning;
     private Bitmap coinBitmap;
     private int coinNumber;
-    private GameState gameState;// 表示当前游戏状态
-    private int stateDelay_lifecounter;
-    private int stateDelay_finish;
-    private int stateDelay_logo;
-    private int stateDelay_gameover;
+    // 表示当前游戏状态
+    private GameState gameState;
+    private int stateDelayLifeCounter;
+    private int stateDelayFinish;
+    private int stateDelayLogo;
+    private int stateDelayGameOver;
     private boolean isFirstRun;
-    private boolean isMaioDieSoundPlayed;
+    private boolean isMarioDieSoundPlayed;
     private List<Sprite> commonBricks;
     private TiledLayer tiledLayer_cover;
     private Bitmap enemyBulletBitmap;
@@ -131,8 +136,6 @@ public class SmView extends SurfaceView implements Callback, Runnable {
     private boolean isTransferReady;
     private boolean isTransferDone;
 
-    // endregion
-    // region 通用方法
     public SmView(Context context) {
         super(context);
         this.context = context;
@@ -146,16 +149,8 @@ public class SmView extends SurfaceView implements Callback, Runnable {
         // 获取对应在缩放比例
         scaleX = (float) outSize.x / 800;
         scaleY = (float) outSize.y / 480;
-        myMusic = new SmMusic(context);
-        mySoundPool = new SmSoundPool(context);
-    }
-
-    public boolean isPause() {
-        return isPause;
-    }
-
-    public void setPause(boolean pause) {
-        isPause = pause;
+        smMusic = new SmMusic(context);
+        smSoundPool = new SmSoundPool(context);
     }
 
     @Override
@@ -171,7 +166,7 @@ public class SmView extends SurfaceView implements Callback, Runnable {
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         isRunning = false;
-        myMusic.stop();
+        smMusic.stop();
         threadRunning = false;
         // 游戏退出时记录最高分
         Integer hiscore = sp.getInt("hiscore", 0);
@@ -185,26 +180,26 @@ public class SmView extends SurfaceView implements Callback, Runnable {
         if (gameState != null) {
             switch (gameState) {
                 case LOGO: {
-                    if (stateDelay_logo > 40) {
+                    if (stateDelayLogo > 40) {
                         init();
-                        stateDelay_logo = 0;
+                        stateDelayLogo = 0;
                         coinNumber = 0;
                     }
                 }
                 break;
                 case FINISH: {
-                    if (stateDelay_finish > 100) {
+                    if (stateDelayFinish > 100) {
                         gameState = LOGO;
                         lifeNumber = 3;
-                        stateDelay_finish = 0;
+                        stateDelayFinish = 0;
                     }
                 }
                 break;
                 case GAMEOVER: {
-                    if (stateDelay_gameover > 40) {
+                    if (stateDelayGameOver > 40) {
                         gameState = LOGO;
                         lifeNumber = 3;
-                        stateDelay_gameover = 0;
+                        stateDelayGameOver = 0;
                     }
 
                 }
@@ -221,7 +216,7 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                         if (rectF.contains(event.getX(i), event.getY(i))) {
                             if (isTransferReady) {
                                 gameState = TRANSFER;
-                                mySoundPool.play(mySoundPool.getTransferSound());
+                                smSoundPool.play(smSoundPool.getTransferSound());
                             }
                         }
 
@@ -236,7 +231,7 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                             // jump
                             if (!mario.isDead() && !mario.isJumping()) {
                                 mario.setJumping(true);
-                                mySoundPool.play(mySoundPool.getJumpSound());
+                                smSoundPool.play(smSoundPool.getJumpSound());
                                 mario.setSpeedY(-16);
                             }
                         }
@@ -270,10 +265,10 @@ public class SmView extends SurfaceView implements Callback, Runnable {
         while (isRunning) {
             // 游戏暂停
             if (!isPause()) {
-                myLogic();
+                smLogic();
             }
             long startTime = System.currentTimeMillis();
-            myDraw();
+            smDraw();
             long endTime = System.currentTimeMillis();
             long time = endTime - startTime;
             if (time < 1000 / 35) {
@@ -536,19 +531,16 @@ public class SmView extends SurfaceView implements Callback, Runnable {
         }
     }
 
-
-    // endregion
-
-    private void myLogic() {
+    private void smLogic() {
         switch (gameState) {
             case TRANSFER: {
                 if (!mario.isDead()) {
                     mario.move(0, 3);
                     if (mario.getY() > 280) {
-                        tiledLayer_peng01.move(-980, 0);
+                        tiledLayer.move(-980, 0);
                         tiledLayer_cover.move(-980, 0);
                         // 到达地图边界 人物移动
-                        spritesMove(chestunts, -980);
+                        spritesMove(chestnuts, -980);
                         spritesMove(cannons, -980);
                         spritesMove(turtles, -980);
                         spritesMove(bricks, -980);
@@ -562,7 +554,7 @@ public class SmView extends SurfaceView implements Callback, Runnable {
             }
             break;
             case GAMING: {
-                if (!threadRunning && isInited) {
+                if (!threadRunning && inited) {
                     thread.start();
                     threadRunning = true;
                 }
@@ -576,12 +568,12 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                     if (!mario.isDead()) {
 
                         if (mario.isInvincible()) {
-                            myMusic.play("music/invincible.mp3", true);
+                            smMusic.play("music/invincible.mp3", true);
                         } else {
-                            myMusic.play("music/bgm.mp3", true);
+                            smMusic.play("music/bgm.mp3", true);
                         }
                         spritesLogic(cannons);
-                        spritesLogic(chestunts);
+                        spritesLogic(chestnuts);
                         spritesLogic(mario.getBullets());
                         spritesLogic(commonBricks);
                         spritesLogic(items);
@@ -589,47 +581,47 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                         spritesLogic(bricks);
                         spritesLogic(pipes);
                     } else {
-                        if (!isMaioDieSoundPlayed) {
-                            myMusic.play("music/over.mp3", false);
-                            isMaioDieSoundPlayed = true;
+                        if (!isMarioDieSoundPlayed) {
+                            smMusic.play("music/over.mp3", false);
+                            isMarioDieSoundPlayed = true;
                         }
                     }
                     marioMove();
-                    myStep();
+                    smStep();
                     collisionWithMap();
-                    myCollision();
+                    smCollision();
                 }
 
-                myTime();
+                smTime();
             }
             break;
             case LIFTCOUNTER: {
-                myMusic.stop();
+                smMusic.stop();
                 if (lifeNumber < 1) {
                     gameState = GAMEOVER;
                 } else {
-                    if (stateDelay_lifecounter++ > 50) {
+                    if (stateDelayLifeCounter++ > 50) {
                         gameState = GAMING;
                         init();
-                        stateDelay_lifecounter = 0;
+                        stateDelayLifeCounter = 0;
                     }
                 }
             }
             break;
             case GAMEOVER: {
-                stateDelay_gameover++;
+                stateDelayGameOver++;
 
             }
             break;
             case FINISH: {
-                myMusic.play("music/finish.mp3", false);
+                smMusic.play("music/finish.mp3", false);
                 threadRunning = false;
-                stateDelay_finish++;
+                stateDelayFinish++;
             }
             break;
             case LOGO: {
-                stateDelay_logo++;
-                myMusic.stop();
+                stateDelayLogo++;
+                smMusic.stop();
             }
             break;
         }
@@ -638,7 +630,7 @@ public class SmView extends SurfaceView implements Callback, Runnable {
     /**
      * 超时处理
      */
-    private void myTime() {
+    private void smTime() {
         if (time <= 0) {
             mario.setDead(true);
         }
@@ -664,14 +656,14 @@ public class SmView extends SurfaceView implements Callback, Runnable {
     /**
      * 游戏进度控制
      */
-    private void myStep() {
-        if (tiledLayer_peng01.getX() == 0 && !isEnemyShown1) {
+    private void smStep() {
+        if (tiledLayer.getX() == 0 && !isEnemyShown1) {
             for (int i = 0; i < 3; i++) {
-                Enemy chestunt = new Chestunt(32, 32, chestuntBitmaps);
+                Enemy chestunt = new Chestnut(32, 32, chestnutBitmaps);
                 chestunt.setVisible(true);
                 chestunt.setMirror(true);
                 chestunt.setPosition(500 + 60 * i, 328);
-                chestunts.add(chestunt);
+                chestnuts.add(chestunt);
 
             }
             for (int i = 0; i < 2; i++) {
@@ -684,15 +676,15 @@ public class SmView extends SurfaceView implements Callback, Runnable {
             isEnemyShown1 = true;
 
         }
-        if (tiledLayer_peng01.getX() == -480 && !isEnemyShown2) {
+        if (tiledLayer.getX() == -480 && !isEnemyShown2) {
             for (int i = 0; i < 3; i++) {
-                Enemy enemy = new Chestunt(32, 32, chestuntBitmaps);
+                Enemy enemy = new Chestnut(32, 32, chestnutBitmaps);
                 enemy.setVisible(true);
                 enemy.setPosition(720 + 60 * i, 328);
-                chestunts.add(enemy);
+                chestnuts.add(enemy);
             }
             for (int i = 0; i < 2; i++) {
-                Cannon cannon = new Cannon(40, 80, cannonBitmaps, mySoundPool);
+                Cannon cannon = new Cannon(40, 80, cannonBitmaps, smSoundPool);
                 cannon.setVisible(true);
                 cannon.setPosition(800 + 80 * i, 160 - 40 * i);
                 EnemyBullet enemyBullet = new EnemyBullet(enemyBulletBitmap);
@@ -705,16 +697,16 @@ public class SmView extends SurfaceView implements Callback, Runnable {
 
             isEnemyShown2 = true;
         }
-        if (tiledLayer_peng01.getX() == -1000 && !isEnemyShown3) {
+        if (tiledLayer.getX() == -1000 && !isEnemyShown3) {
             for (int i = 0; i < 3; i++) {
-                Enemy chestunt = new Chestunt(32, 32, chestuntBitmaps);
+                Enemy chestunt = new Chestnut(32, 32, chestnutBitmaps);
                 chestunt.setVisible(true);
                 chestunt.setPosition(500 + 60 * i, 0);
-                chestunts.add(chestunt);
+                chestnuts.add(chestunt);
             }
             isEnemyShown3 = true;
         }
-        if (tiledLayer_peng01.getX() == -1400 && !isEnemyShown4) {
+        if (tiledLayer.getX() == -1400 && !isEnemyShown4) {
             for (int i = 0; i < 2; i++) {
                 Turtle turtle = new Turtle(32, 48, turtleBitmaps);
                 turtle.setVisible(true);
@@ -723,7 +715,7 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                 turtle.setPosition(700 + 40 * i, 100);
                 turtles.add(turtle);
             }
-            Cannon cannon = new Cannon(40, 80, cannonBitmaps, mySoundPool);
+            Cannon cannon = new Cannon(40, 80, cannonBitmaps, smSoundPool);
             cannon.setVisible(true);
             cannon.setPosition(640, 160);
             EnemyBullet enemyBullet = new EnemyBullet(enemyBulletBitmap);
@@ -734,18 +726,18 @@ public class SmView extends SurfaceView implements Callback, Runnable {
             cannons.add(cannon);
             isEnemyShown4 = true;
         }
-        if (tiledLayer_peng01.getX() == -2200 && !isEnemyShown5) {
+        if (tiledLayer.getX() == -2200 && !isEnemyShown5) {
             for (int i = 0; i < 7; i++) {
-                Enemy chestunt = new Chestunt(32, 32, chestuntBitmaps);
+                Enemy chestunt = new Chestnut(32, 32, chestnutBitmaps);
                 chestunt.setVisible(true);
                 chestunt.setPosition(360 + 40 * i, 240 - 40 * i);
-                chestunts.add(chestunt);
+                chestnuts.add(chestunt);
             }
             isEnemyShown5 = true;
         }
 
 
-        if (tiledLayer_peng01.getX() == -2800) {
+        if (tiledLayer.getX() == -2800) {
             gameState = FINISH;
         }
     }
@@ -768,12 +760,12 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                 } else if (mario.getX() < 400) {
                     mario.move(4, 0);
                     // 越过屏幕中点 地图移动
-                } else if (tiledLayer_peng01.getX() > 800 - tiledLayer_peng01.getCols()
-                        * tiledLayer_peng01.getWidth()) {
-                    tiledLayer_peng01.move(-4, 0);
+                } else if (tiledLayer.getX() > 800 - tiledLayer.getCols()
+                        * tiledLayer.getWidth()) {
+                    tiledLayer.move(-4, 0);
                     tiledLayer_cover.move(-4, 0);
                     // 到达地图边界 人物移动
-                    spritesMove(chestunts, -4);
+                    spritesMove(chestnuts, -4);
                     spritesMove(cannons, -4);
                     spritesMove(turtles, -4);
                     spritesMove(bricks, -4);
@@ -807,9 +799,9 @@ public class SmView extends SurfaceView implements Callback, Runnable {
     private void init() {
         isTransferReady = false;
         isTransferDone = true;
-        isInited = false;
+        inited = false;
         threadRunning = false;
-        isMaioDieSoundPlayed = false;
+        isMarioDieSoundPlayed = false;
         time = 300;
         isEnemyShown1 = false;
         isEnemyShown2 = false;
@@ -831,7 +823,7 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                     isTransferReady = false;
                     time--;
                     if (time == 100) {
-                        mySoundPool.play(mySoundPool.getHurryUpSound());
+                        smSoundPool.play(smSoundPool.getHurryUpSound());
 
                     }
                 }
@@ -844,7 +836,7 @@ public class SmView extends SurfaceView implements Callback, Runnable {
         leftBitmap = getBitmap("button/left.png");
         rightBitmap = getBitmap("button/right.png");
         downBitmap = getBitmap("button/down.png");
-        gameoverbitmap = getBitmap("logo/gameover.png");
+        gameOverBitmap = getBitmap("logo/gameover.png");
         marioBitmap = getBitmap("mario/small/mario_01.png");
         logoBitmap = getBitmap("logo/logo.jpg");
         finishBitmap = getBitmap("logo/finish.jpg");
@@ -889,11 +881,11 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                     "brick/broken/broken_%02d.png", i)));
         }
 
-        chestuntBitmaps = new ArrayList<>();
+        chestnutBitmaps = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
-            chestuntBitmaps.add(getBitmap("enemy/chestunt/chestunt_0" + i + ".png"));
+            chestnutBitmaps.add(getBitmap("enemy/chestunt/chestunt_0" + i + ".png"));
         }
-        chestunts = new ArrayList<>();
+        chestnuts = new ArrayList<>();
         List<Bitmap> coinBitmaps = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             coinBitmaps.add(getBitmap(String.format(Locale.CHINA,
@@ -1024,9 +1016,9 @@ public class SmView extends SurfaceView implements Callback, Runnable {
         int[][] map_peng01 = getMapArray();
         int[][] map_cover = getMapCoverArray();
         Bitmap mapBitmap = getBitmap("map/map1.png");
-        tiledLayer_peng01 = new TiledLayer(mapBitmap, 100, 12, 40, 40);
+        tiledLayer = new TiledLayer(mapBitmap, 100, 12, 40, 40);
         tiledLayer_cover = new TiledLayer(mapBitmap, 100, 12, 40, 40);
-        tiledLayer_peng01.setTiledCell(map_peng01);
+        tiledLayer.setTiledCell(map_peng01);
         tiledLayer_cover.setTiledCell(map_cover);
         if (isFirstRun) {
             gameState = LOGO;
@@ -1034,12 +1026,10 @@ public class SmView extends SurfaceView implements Callback, Runnable {
         } else {
             gameState = GAMING;
         }
-        isInited = true;
-
-
+        inited = true;
     }
 
-    private void myDraw() {
+    private void smDraw() {
         try {
             lockCanvas = holder.lockCanvas();
             lockCanvas.save();
@@ -1052,9 +1042,9 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                 break;
                 case GAMEOVER: {
                     lockCanvas.drawColor(Color.BLACK);
-                    lockCanvas.drawBitmap(gameoverbitmap,
-                            400 - gameoverbitmap.getWidth() / 2,
-                            250 - gameoverbitmap.getHeight() / 2, null);
+                    lockCanvas.drawBitmap(gameOverBitmap,
+                            400 - gameOverBitmap.getWidth() / 2,
+                            250 - gameOverBitmap.getHeight() / 2, null);
                 }
                 break;
                 case FINISH: {
@@ -1073,10 +1063,10 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                 case TRANSFER:
                 case GAMING: {
                     tiledLayer_cover.draw(lockCanvas);
-                    tiledLayer_peng01.draw(lockCanvas);
+                    tiledLayer.draw(lockCanvas);
                     spritesDraw(bricks, lockCanvas);
                     spritesDraw(commonBricks, lockCanvas);
-                    spritesDraw(chestunts, lockCanvas);
+                    spritesDraw(chestnuts, lockCanvas);
                     spritesDraw(cannons, lockCanvas);
                     spritesDraw(turtles, lockCanvas);
                     spritesDraw(items, lockCanvas);
@@ -1171,7 +1161,7 @@ public class SmView extends SurfaceView implements Callback, Runnable {
     /**
      * 玛丽奥与砖块碰撞
      */
-    private void myCollision() {
+    private void smCollision() {
         // 玛丽与普通砖块
         sptiteCollisionSprite(mario, commonBricks);
         // 玛丽与问号砖块
@@ -1197,20 +1187,20 @@ public class SmView extends SurfaceView implements Callback, Runnable {
         sptitesCollisionSprites(turtles, commonBricks);
         sptitesCollisionSprites(turtles, pipes);
         // 敌人与砖块
-        sptitesCollisionSprites(chestunts, bricks);
-        sptitesCollisionSprites(chestunts, commonBricks);
-        sptitesCollisionSprites(chestunts, pipes);
+        sptitesCollisionSprites(chestnuts, bricks);
+        sptitesCollisionSprites(chestnuts, commonBricks);
+        sptitesCollisionSprites(chestnuts, pipes);
         // 玛丽子弹与砖块
         sptitesCollisionSprites(mario.getBullets(), bricks);
         // 龟壳与敌人碰撞
         sptitesCollisionSprites(mario.getBullets(), commonBricks);
         sptitesCollisionSprites(mario.getBullets(), pipes);
         turtleShellCollisionWith(turtles);
-        turtleShellCollisionWith(chestunts);
+        turtleShellCollisionWith(chestnuts);
 
         if (!mario.isDead()) {
             // 玛丽与板栗碰撞
-            marioCollisionWith(chestunts);
+            marioCollisionWith(chestnuts);
             marioCollisionWith(turtles);
             marioCollisionWith(items);
             marioCollisionWith(pipes);
@@ -1238,7 +1228,7 @@ public class SmView extends SurfaceView implements Callback, Runnable {
             spritesCollisionMap(mario.getBullets());
         }
         // 敌人碰撞
-        spritesCollisionMap(chestunts);
+        spritesCollisionMap(chestnuts);
         spritesCollisionMap(turtles);
         spritesCollisionMap(cannons);
         // 道具与地图碰撞
@@ -1287,7 +1277,7 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                             ((Turtle) sprite).setZeroDamage(true);
                             updateScore(100);
                         } else {
-                            mySoundPool.play(mySoundPool.getHitEnemySound());
+                            smSoundPool.play(smSoundPool.getHitEnemySound());
                             ((Turtle) sprite).setOverturn(true);
                             if (shell.getX() > sprite.getX()) {
                                 sprite.setMirror(false);
@@ -1300,7 +1290,7 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                         }
                     }
                 } else {
-                    mySoundPool.play(mySoundPool.getHitEnemySound());
+                    smSoundPool.play(smSoundPool.getHitEnemySound());
                     ((Enemy) sprite).setOverturn(true);
                     if (shell.getX() > sprite.getX()) {
                         sprite.setMirror(false);
@@ -1357,7 +1347,7 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                             sprite.setVisible(false);
                         } else if (mario.isJumping() && mario.siteCollisionWith(sprite, 下) &&
                                 !sprite.isDead()) {
-                            mySoundPool.play(mySoundPool.getHitEnemySound());
+                            smSoundPool.play(smSoundPool.getHitEnemySound());
                             // 杀死敌人时获得100积分
                             updateScore(100);
                             mario.setSpeedY(-10);
@@ -1367,7 +1357,7 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                                 int status = mario.getStatus();
                                 if (status != 0) {
                                     mario.shapeShift(status - 1);
-                                    mySoundPool.play(mySoundPool.getHurtSound());
+                                    smSoundPool.play(smSoundPool.getHurtSound());
                                     mario.setZeroDamage(true);
                                 } else {
                                     mario.setDead(true);
@@ -1376,10 +1366,10 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                             }
                         }
                     } else {
-                        int sound = mySoundPool.getItemSound();
+                        int sound = smSoundPool.getItemSound();
                         int status = mario.getStatus();
                         if (sprite instanceof Mushroom) {
-                            mySoundPool.play(mySoundPool.getItemSound());
+                            smSoundPool.play(smSoundPool.getItemSound());
                             if (status == 0) {
                                 mario.shapeShift(1);
                             }
@@ -1409,9 +1399,9 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                         }
                         if (sprite instanceof Coin) {
                             coinNumber++;
-                            sound = mySoundPool.getCoinSound();
+                            sound = smSoundPool.getCoinSound();
                         }
-                        mySoundPool.play(sound);
+                        smSoundPool.play(sound);
                         sprite.setVisible(false);
                         updateScore(100);
                     }
@@ -1436,7 +1426,7 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                                     } else {
                                         ((Enemy) sprite).setOverturn(true);
                                         sprite.setDead(true);
-                                        mySoundPool.play(mySoundPool.getHitEnemySound());
+                                        smSoundPool.play(smSoundPool.getHitEnemySound());
                                         updateScore(100);
                                         mario.setSpeedY(-10);
                                         mario.setJumping(true);
@@ -1446,7 +1436,7 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                                 ((Enemy) sprite).setOverturn(true);
                                 sprite.setSpeedY(-10);
                                 sprite.setDead(true);
-                                mySoundPool.play(mySoundPool.getHitEnemySound());
+                                smSoundPool.play(smSoundPool.getHitEnemySound());
                                 // 杀死敌人时获得100积分
                                 updateScore(100);
                             }
@@ -1462,13 +1452,13 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                                         mario.setSpeedY(-10);
                                     } else {
                                         sprite.setDead(true);
-                                        mySoundPool.play(mySoundPool.getHitEnemySound());
+                                        smSoundPool.play(smSoundPool.getHitEnemySound());
                                         updateScore(100);
                                     }
                                 }
                             } else {
                                 sprite.setDead(true);
-                                mySoundPool.play(mySoundPool.getHitEnemySound());
+                                smSoundPool.play(smSoundPool.getHitEnemySound());
                                 // 杀死敌人时获得100积分
                                 updateScore(100);
                                 mario.setSpeedY(-10);
@@ -1478,7 +1468,7 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                                 int status = mario.getStatus();
                                 if (status != 0) {
                                     mario.shapeShift(status - 1);
-                                    mySoundPool.play(mySoundPool.getHurtSound());
+                                    smSoundPool.play(smSoundPool.getHurtSound());
                                     mario.setZeroDamage(true);
                                 } else {
                                     mario.setDead(true);
@@ -1504,7 +1494,7 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                                 int status = mario.getStatus();
                                 if (status != 0) {
                                     mario.shapeShift(status - 1);
-                                    mySoundPool.play(mySoundPool.getHurtSound());
+                                    smSoundPool.play(smSoundPool.getHurtSound());
                                     mario.setZeroDamage(true);
                                 } else {
                                     mario.setDead(true);
@@ -1542,13 +1532,13 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                                     sprite.setMirror(true);
                                 }
                                 sprite.setSpeedY(-10);
-                                mySoundPool.play(mySoundPool.getHitEnemySound());
+                                smSoundPool.play(smSoundPool.getHitEnemySound());
                                 updateScore(100);
                             }
                         }
                         sprite1.setVisible(false);
                     } else {
-                        mySoundPool.play(mySoundPool.getHitEnemySound());
+                        smSoundPool.play(smSoundPool.getHitEnemySound());
                         sprite1.setVisible(false);
 //             sprite.setVisiable(false);
 //             sprite.setDead(true);
@@ -1589,9 +1579,9 @@ public class SmView extends SurfaceView implements Callback, Runnable {
     private void spriteCollisionMap(Sprite sprite) {
         if (sprite.isVisible() && !sprite.isDead()) {
             // 头顶碰撞
-            if (sprite.siteCollisionWith(tiledLayer_peng01, 上左) ||
-                    sprite.siteCollisionWith(tiledLayer_peng01, 上中) ||
-                    sprite.siteCollisionWith(tiledLayer_peng01, 上右)) {
+            if (sprite.siteCollisionWith(tiledLayer, 上左) ||
+                    sprite.siteCollisionWith(tiledLayer, 上中) ||
+                    sprite.siteCollisionWith(tiledLayer, 上右)) {
                 if (sprite instanceof Bullet) {
                     sprite.setVisible(false);
                 } else {
@@ -1599,9 +1589,9 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                 }
             }
             // 脚部碰撞
-            if (sprite.siteCollisionWith(tiledLayer_peng01, 下左) ||
-                    sprite.siteCollisionWith(tiledLayer_peng01, 下中) ||
-                    sprite.siteCollisionWith(tiledLayer_peng01, 下右)) {
+            if (sprite.siteCollisionWith(tiledLayer, 下左) ||
+                    sprite.siteCollisionWith(tiledLayer, 下中) ||
+                    sprite.siteCollisionWith(tiledLayer, 下右)) {
                 // 乌龟特殊处理
                 if (sprite instanceof Turtle) {
                     if (((Turtle) sprite).isCanFly()) {
@@ -1610,8 +1600,8 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                     } else {
                         sprite.setJumping(false);
                         int footY = sprite.getY() + sprite.getHeight();
-                        int newY = footY / tiledLayer_peng01.getHeight()
-                                * tiledLayer_peng01.getHeight()
+                        int newY = footY / tiledLayer.getHeight()
+                                * tiledLayer.getHeight()
                                 - sprite.getHeight();
                         sprite.setPosition(sprite.getX(), newY);
                     }
@@ -1625,8 +1615,8 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                     // 取得脚部坐标
                     int footY = sprite.getY() + sprite.getHeight();
                     // 取整
-                    int newY = footY / tiledLayer_peng01.getHeight()
-                            * tiledLayer_peng01.getHeight()
+                    int newY = footY / tiledLayer.getHeight()
+                            * tiledLayer.getHeight()
                             - sprite.getHeight();
                     sprite.setPosition(sprite.getX(), newY);
                 }
@@ -1637,9 +1627,9 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                 sprite.setSpeedY(0);
             }
             // 左边碰撞
-            if (sprite.siteCollisionWith(tiledLayer_peng01, 左上) ||
-                    sprite.siteCollisionWith(tiledLayer_peng01, 左中) ||
-                    sprite.siteCollisionWith(tiledLayer_peng01, 左下)) {
+            if (sprite.siteCollisionWith(tiledLayer, 左上) ||
+                    sprite.siteCollisionWith(tiledLayer, 左中) ||
+                    sprite.siteCollisionWith(tiledLayer, 左下)) {
                 if (sprite instanceof Bullet) {
                     sprite.setVisible(false);
                 } else {
@@ -1648,9 +1638,9 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                 }
             }
             // 右边碰撞
-            if (sprite.siteCollisionWith(tiledLayer_peng01, 右上) ||
-                    sprite.siteCollisionWith(tiledLayer_peng01, 右中) ||
-                    sprite.siteCollisionWith(tiledLayer_peng01, 右下)) {
+            if (sprite.siteCollisionWith(tiledLayer, 右上) ||
+                    sprite.siteCollisionWith(tiledLayer, 右中) ||
+                    sprite.siteCollisionWith(tiledLayer, 右下)) {
                 if (sprite instanceof Bullet) {
                     sprite.setVisible(false);
                 } else {
@@ -1662,17 +1652,17 @@ public class SmView extends SurfaceView implements Callback, Runnable {
         } else if (sprite.isVisible() && sprite.isDead() && sprite instanceof Turtle) {
             if (!((Turtle) sprite).isOverturn()) {
                 // 脚部碰撞
-                if (sprite.siteCollisionWith(tiledLayer_peng01, 下左) ||
-                        sprite.siteCollisionWith(tiledLayer_peng01, 下中) ||
-                        sprite.siteCollisionWith(tiledLayer_peng01, 下右)) {
+                if (sprite.siteCollisionWith(tiledLayer, 下左) ||
+                        sprite.siteCollisionWith(tiledLayer, 下中) ||
+                        sprite.siteCollisionWith(tiledLayer, 下右)) {
                     // 乌龟特殊处理
                     sprite.setJumping(false);
                     // 坐标修正
                     // 取得脚部坐标
                     int footY = sprite.getY() + sprite.getHeight();
                     // 取整
-                    int newY = footY / tiledLayer_peng01.getHeight()
-                            * tiledLayer_peng01.getHeight()
+                    int newY = footY / tiledLayer.getHeight()
+                            * tiledLayer.getHeight()
                             - sprite.getHeight();
                     sprite.setPosition(sprite.getX(), newY);
                 }
@@ -1683,17 +1673,17 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                 sprite.setSpeedY(0);
             }
             // 左边碰撞
-            if (sprite.siteCollisionWith(tiledLayer_peng01, 左上) ||
-                    sprite.siteCollisionWith(tiledLayer_peng01, 左中) ||
-                    sprite.siteCollisionWith(tiledLayer_peng01, 左下)) {
+            if (sprite.siteCollisionWith(tiledLayer, 左上) ||
+                    sprite.siteCollisionWith(tiledLayer, 左中) ||
+                    sprite.siteCollisionWith(tiledLayer, 左下)) {
                 sprite.setMirror(true);
                 sprite.move(10, 0);
 
             }
             // 右边碰撞
-            if (sprite.siteCollisionWith(tiledLayer_peng01, 右上) ||
-                    sprite.siteCollisionWith(tiledLayer_peng01, 右中) ||
-                    sprite.siteCollisionWith(tiledLayer_peng01, 右下)) {
+            if (sprite.siteCollisionWith(tiledLayer, 右上) ||
+                    sprite.siteCollisionWith(tiledLayer, 右中) ||
+                    sprite.siteCollisionWith(tiledLayer, 右下)) {
                 sprite.setMirror(false);
                 sprite.move(-10, 0);
 
@@ -1776,8 +1766,8 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                                 // 取得脚部坐标
                                 int footY = sprite0.getY() + sprite0.getHeight();
                                 // 取整
-                                int newY = footY / tiledLayer_peng01.getHeight()
-                                        * tiledLayer_peng01.getHeight()
+                                int newY = footY / tiledLayer.getHeight()
+                                        * tiledLayer.getHeight()
                                         - sprite0.getHeight();
                                 sprite0.setPosition(sprite0.getX(), newY);
                             }
@@ -1792,17 +1782,17 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                                 ((CommonBrick) sprite1).setCanBroken(true);
                                 sprite1.setSpeedY(-4);
                                 sprite1.setJumping(true);
-                                mySoundPool.play(mySoundPool.getBrokenSound());
+                                smSoundPool.play(smSoundPool.getBrokenSound());
                             } else {
                                 sprite1.setSpeedY(-4);
                                 sprite1.setJumping(true);
-                                mySoundPool.play(mySoundPool.getCannotbreakSound());
+                                smSoundPool.play(smSoundPool.getCannotBreakSound());
                             }
                         }
                     } else if (sprite1 instanceof Brick) {
                         sprite0.setSpeedY(Math.abs(sprite0.getSpeedY()));
-                        if (((Brick) sprite1).hasItem()) {
-                            mySoundPool.play(mySoundPool.getHitbrickSound());
+                        if (((Brick) sprite1).isHasItem()) {
+                            smSoundPool.play(smSoundPool.getHitBrickSound());
                             sprite1.setSpeedY(-4);
                             sprite1.setJumping(true);
                         }
@@ -1843,8 +1833,8 @@ public class SmView extends SurfaceView implements Callback, Runnable {
                 // 取得脚部坐标
                 int footY = sprite0.getY() + sprite0.getHeight();
                 // 取整
-                int newY = footY / tiledLayer_peng01.getHeight()
-                        * tiledLayer_peng01.getHeight()
+                int newY = footY / tiledLayer.getHeight()
+                        * tiledLayer.getHeight()
                         - sprite0.getHeight();
                 sprite0.setPosition(sprite0.getX(), newY);
             }
