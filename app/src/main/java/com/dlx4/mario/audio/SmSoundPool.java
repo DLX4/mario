@@ -8,30 +8,28 @@ import android.util.Log;
 import java.io.IOException;
 
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
 public class SmSoundPool {
 
-    private Context mContext;
-    private SoundPool mSoundPool;
-    private int hitBrickSound;
-    private int coinSound;
-    private int hurryUpSound;
-    private int hitEnemySound;
-    private int jumpSound;
-    private int cannotBreakSound;
-    private int hurtSound;
-    private int cannonSound;
-    private int transferSound;
-    private int brokenSound;
-    private int itemSound;
+    private final Context context;
+    private final SoundPool soundPool;
+    private final int hitBrickSound;
+    private final int coinSound;
+    private final int hurryUpSound;
+    private final int hitEnemySound;
+    private final int jumpSound;
+    private final int cannotBreakSound;
+    private final int hurtSound;
+    private final int cannonSound;
+    private final int transferSound;
+    private final int brokenSound;
+    private final int itemSound;
 
     public SmSoundPool(Context mContext) {
         super();
-        this.mContext = mContext;
-        mSoundPool = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
+        this.context = mContext;
+        soundPool = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
         cannotBreakSound = getSoundId("sounds/cannotbreak.mp3");
         itemSound = getSoundId("sounds/mushroom.mp3");
         hitBrickSound = getSoundId("sounds/duang.mp3");
@@ -46,13 +44,13 @@ public class SmSoundPool {
     }
 
     public void play(int soundID) {
-        mSoundPool.play(soundID, 1, 1, 1, 1, 1);
+        soundPool.play(soundID, 1, 1, 1, 1, 1);
     }
 
     public int getSoundId(String fileName) {
         int soundId = 0;
         try {
-            soundId = mSoundPool.load(mContext.getAssets().openFd(fileName), 1);
+            soundId = soundPool.load(context.getAssets().openFd(fileName), 1);
         } catch (IOException e) {
             Log.d("MySoundPool", e.getMessage());
         }

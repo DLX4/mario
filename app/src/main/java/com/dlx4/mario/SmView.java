@@ -169,8 +169,8 @@ public class SmView extends SurfaceView implements Callback, Runnable {
         smMusic.stop();
         threadRunning = false;
         // 游戏退出时记录最高分
-        Integer hiscore = sp.getInt("hiscore", 0);
-        if (hiscore < score) {
+        int hiScore = sp.getInt("hiscore", 0);
+        if (hiScore < score) {
             sp.edit().putInt("hiscore", score).apply();
         }
     }

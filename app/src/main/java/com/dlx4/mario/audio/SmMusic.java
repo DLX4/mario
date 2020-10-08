@@ -8,24 +8,24 @@ import java.io.IOException;
 
 public class SmMusic {
 
-    private Context mContext;
-    private MediaPlayer mediaPlayer;
-    private String mFileName = "";
+    private final Context context;
+    private final MediaPlayer mediaPlayer;
+    private String fileName = "";
 
     public SmMusic(Context mContext) {
         super();
-        this.mContext = mContext;
+        this.context = mContext;
         mediaPlayer = new MediaPlayer();
     }
 
     public void play(String fileName, boolean looping) {
-        if (mFileName.equals(fileName)) {
+        if (this.fileName.equals(fileName)) {
             return;
         } else {
             try {
                 mediaPlayer.reset();
-                mFileName = fileName;
-                AssetFileDescriptor fd = mContext.getAssets().openFd(fileName);
+                this.fileName = fileName;
+                AssetFileDescriptor fd = context.getAssets().openFd(fileName);
                 mediaPlayer.setDataSource(fd.getFileDescriptor(),
                         fd.getStartOffset(),
                         fd.getLength());
